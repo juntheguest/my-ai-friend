@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 AI 친구</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    .app {
+      max-width: 600px;
+      height: 100vh;
+      margin: auto;
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 18px;
+      background: #fee500;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .status {
+      font-size: 12px;
+      font-weight: normal;
+      margin-top: 4px;
+      color: #555;
+    }
+
+    .chat {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      display: flex;
+    }
+
+    .ai {
+      justify-content: flex-start;
+    }
+
+    .user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 75%;
+      padding: 12px 15px;
+      border-radius: 15px;
+      line-height: 1.5;
+    }
+
+    .ai .bubble {
+      background: #f0f0f0;
+    }
+
+    .user .bubble {
+      background: #fee500;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      gap: 8px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .input-area button {
+      border: none;
+      background: #fee500;
+      border-radius: 20px;
+      padding: 0 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+
+    <div class="header">
+      🤖 나의 AI 친구
+      <div class="status">온라인</div>
+    </div>
+
+    <div class="chat" id="chat">
+
+      <div class="message ai">
+        <div class="bubble">
+          안녕! 👋<br>
+          나는 네 AI 친구야.
+        </div>
+      </div>
+
+      <div class="message ai">
+        <div class="bubble">
+          앞으로 나랑 편하게 이야기하면 돼 :)
+        </div>
+      </div>
+
+    </div>
+
+    <div class="input-area">
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="메시지를 입력하세요..."
+      >
+      <button onclick="sendMessage()">전송</button>
+    </div>
+
+  </div>
+
+  <script>
+
+    function sendMessage() {
+
+      const input = document.getElementById("messageInput");
+      const message = input.value.trim();
+
+      if (message === "") {
+        return;
+      }
+
+      const chat = document.getElementById("chat");
+
+      const userMessage = document.createElement("div");
+      userMessage.className = "message user";
+
+      userMessage.innerHTML = `
+        <div class="bubble">
+          ${message}
+        </div>
+      `;
+
+      chat.appendChild(userMessage);
+
+      input.value = "";
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    document
+      .getElementById("messageInput")
+      .addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+          sendMessage();
+        }
+
+      });
+
+  </script>
+
+</body>
+</html>
