@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>웬즈데이 - Wednesday</title>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -26,10 +28,16 @@
     }
 
     .header {
-      padding: 18px;
+      padding: 15px 18px;
       background: #fee500;
       font-size: 20px;
       font-weight: bold;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .status {
@@ -37,6 +45,13 @@
       font-weight: normal;
       margin-top: 4px;
       color: #555;
+    }
+
+    .affection {
+      font-size: 11px;
+      font-weight: normal;
+      color: #555;
+      text-align: right;
     }
 
     .chat {
@@ -60,11 +75,12 @@
 
     .bubble {
       max-width: 88%;
-      padding: 12px 15px;
+      padding: 11px 14px;
       border-radius: 15px;
-      line-height: 1.6;
+      line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
+      font-size: 15px;
     }
 
     .ai .bubble {
@@ -104,6 +120,7 @@
       opacity: 0.5;
       cursor: default;
     }
+
   </style>
 </head>
 
@@ -112,21 +129,49 @@
   <div class="app">
 
     <div class="header">
-      웬즈데이
-      <div class="status">온라인</div>
-    </div>
 
-    <div class="chat" id="chat">
+      <div class="header-row">
 
-      <div class="message ai">
-        <div class="bubble">안녕하세요. 저는 웬즈데이입니다.
+        <div>
+          웬즈데이
 
-편하게 말씀해 주세요.</div>
+          <div class="status">
+            온라인
+          </div>
+        </div>
+
+        <div
+          class="affection"
+          id="affectionDisplay"
+        >
+          친밀도 0
+        </div>
+
       </div>
 
     </div>
 
+
+    <div
+      class="chat"
+      id="chat"
+    >
+
+      <div class="message ai">
+
+        <div class="bubble">
+안녕하세요. 저는 웬즈데이입니다.
+
+편하게 말씀해 주세요.
+        </div>
+
+      </div>
+
+    </div>
+
+
     <div class="input-area">
+
       <input
         id="messageInput"
         type="text"
@@ -140,6 +185,7 @@
       >
         전송
       </button>
+
     </div>
 
   </div>
@@ -147,216 +193,528 @@
 
   <script>
 
+    /*
+      ========================================
+      기본 설정
+      ========================================
+    */
+
     const API_URL =
       "https://my-ai-friend-api.juntheguest.workers.dev/";
 
-    const conversationHistory = [];
+
+    /*
+      ========================================
+      저장된 데이터 불러오기
+      ========================================
+    */
+
+    let affection =
+      Number(
+        localStorage.getItem(
+          "wednesday_affection"
+        )
+      ) || 0;
+
+
+    let conversationHistory = [];
+
 
     let activeRequest = null;
+
     let requestSequence = 0;
 
 
     /*
-      --------------------------------
-      기본 유틸리티
-      --------------------------------
+      ========================================
+      감정 분위기
+      ========================================
     */
 
-    function randomBetween(min, max) {
-      return Math.floor(
-        Math.random() * (max - min + 1)
-      ) + min;
+    let currentMood =
+      localStorage.getItem(
+        "wednesday_mood"
+      ) || "calm";
+
+
+    /*
+      ========================================
+      친밀도 화면
+      ========================================
+    */
+
+    function updateAffectionDisplay() {
+
+      const display =
+        document.getElementById(
+          "affectionDisplay"
+        );
+
+      display.textContent =
+        `친밀도 ${affection.toLocaleString()}`;
+
     }
 
 
-    function sleep(ms, signal) {
+    updateAffectionDisplay();
 
-      return new Promise((resolve, reject) => {
 
-        if (signal && signal.aborted) {
-          reject(
-            new DOMException(
-              "요청이 취소되었습니다.",
-              "AbortError"
-            )
-          );
-          return;
-        }
+    /*
+      ========================================
+      랜덤 숫자
+      ========================================
+    */
 
-        const timer = setTimeout(resolve, ms);
+    function randomBetween(min, max) {
 
-        if (signal) {
-
-          const abortHandler = () => {
-            clearTimeout(timer);
-
-            reject(
-              new DOMException(
-                "요청이 취소되었습니다.",
-                "AbortError"
-              )
-            );
-          };
-
-          signal.addEventListener(
-            "abort",
-            abortHandler,
-            { once: true }
-          );
-        }
-
-      });
+      return Math.floor(
+        Math.random() *
+        (max - min + 1)
+      ) + min;
 
     }
 
 
     /*
-      --------------------------------
-      생각하는 시간
-      --------------------------------
-
-      항상 똑같이 기다리지 않음.
-
-      가벼운 말
-      → 짧게
-
-      중요한 질문
-      → 조금 길게
-
-      감정적인 이야기
-      → 조금 더 길게
+      ========================================
+      잠시 기다리기
+      ========================================
     */
 
-    function getThinkingDelay(message) {
+    function sleep(ms, signal) {
 
-      const text = message.trim();
+      return new Promise(
+        (resolve, reject) => {
 
-      const seriousPatterns = [
-        "어떻게 생각해",
-        "너라면",
-        "내가 잘못",
-        "그만둘까",
-        "헤어질까",
-        "결혼",
-        "이혼",
-        "돈",
-        "퇴사",
-        "미래",
-        "결정",
-        "선택",
-        "후회",
-        "왜 살아",
-        "살기 싫",
-        "죽고",
-        "힘들어",
-        "불안해",
-        "무서워",
-        "걱정돼",
-        "속상해"
-      ];
+          if (
+            signal &&
+            signal.aborted
+          ) {
 
-      const surprisingPatterns = [
-        "솔직히",
-        "사실",
-        "진짜",
-        "너는 나를",
-        "나를 어떻게",
-        "비밀",
-        "고백",
-        "좋아해",
-        "사랑해",
-        "싫어",
-        "너라면",
-        "기억해"
-      ];
+            reject(
+              new DOMException(
+                "취소됨",
+                "AbortError"
+              )
+            );
 
-      const emotionalPatterns = [
-        "화나",
-        "짜증",
-        "슬퍼",
-        "외로",
-        "미안",
-        "후회",
-        "답답",
-        "힘들",
-        "불안",
-        "무서",
-        "좋아",
-        "사랑"
-      ];
-
-      const isSerious =
-        seriousPatterns.some(word =>
-          text.includes(word)
-        );
-
-      const isSurprising =
-        surprisingPatterns.some(word =>
-          text.includes(word)
-        );
-
-      const isEmotional =
-        emotionalPatterns.some(word =>
-          text.includes(word)
-        );
+            return;
+          }
 
 
-      if (isSerious || isSurprising) {
-
-        return randomBetween(
-          1500,
-          3000
-        );
-
-      }
+          const timer =
+            setTimeout(
+              resolve,
+              ms
+            );
 
 
-      if (isEmotional) {
+          if (signal) {
 
-        return randomBetween(
-          1200,
-          2400
-        );
+            signal.addEventListener(
+              "abort",
+              () => {
 
-      }
+                clearTimeout(
+                  timer
+                );
 
+                reject(
+                  new DOMException(
+                    "취소됨",
+                    "AbortError"
+                  )
+                );
 
-      if (text.length > 100) {
+              },
+              {
+                once: true
+              }
+            );
 
-        return randomBetween(
-          900,
-          1800
-        );
+          }
 
-      }
-
-
-      if (text.length > 50) {
-
-        return randomBetween(
-          650,
-          1400
-        );
-
-      }
-
-
-      /*
-        짧은 대화는 너무 오래 기다리지 않음.
-      */
-
-      return randomBetween(
-        400,
-        1100
+        }
       );
 
     }
 
 
     /*
-      --------------------------------
-      현재 요청 취소
-      --------------------------------
+      ========================================
+      관계 단계
+      ========================================
+    */
+
+    function getRelationshipLevel() {
+
+      if (affection < 500)
+        return 0;
+
+      if (affection < 1500)
+        return 1;
+
+      if (affection < 3000)
+        return 2;
+
+      if (affection < 5000)
+        return 3;
+
+      if (affection < 7000)
+        return 4;
+
+      if (affection < 8500)
+        return 5;
+
+      if (affection < 9500)
+        return 6;
+
+      return 7;
+
+    }
+
+
+    /*
+      ========================================
+      애정도 증가량 계산
+      ========================================
+
+      단순히 메시지마다 똑같이
+      증가하지 않게 함.
+    */
+
+    function calculateAffectionGain(
+      message
+    ) {
+
+      const text =
+        message.trim();
+
+
+      let gain =
+        randomBetween(
+          1,
+          5
+        );
+
+
+      /*
+        긴 개인적인 이야기
+      */
+
+      if (
+        text.length > 80
+      ) {
+
+        gain +=
+          randomBetween(
+            3,
+            12
+          );
+
+      }
+
+
+      /*
+        감정 표현
+      */
+
+      const emotionalWords = [
+        "힘들",
+        "속상",
+        "걱정",
+        "불안",
+        "외로",
+        "기뻐",
+        "좋아",
+        "사랑",
+        "고마워",
+        "미안",
+        "무서",
+        "후회"
+      ];
+
+
+      if (
+        emotionalWords.some(
+          word =>
+            text.includes(word)
+        )
+      ) {
+
+        gain +=
+          randomBetween(
+            5,
+            20
+          );
+
+      }
+
+
+      /*
+        관계에 관한 이야기
+      */
+
+      const relationshipWords = [
+        "너는",
+        "웬즈데이",
+        "우리",
+        "친구",
+        "좋아해",
+        "보고싶",
+        "생각나",
+        "기억해",
+        "같이",
+        "너라면"
+      ];
+
+
+      if (
+        relationshipWords.some(
+          word =>
+            text.includes(word)
+        )
+      ) {
+
+        gain +=
+          randomBetween(
+            5,
+            20
+          );
+
+      }
+
+
+      /*
+        아주 긴 개인적인 이야기
+      */
+
+      if (
+        text.length > 200
+      ) {
+
+        gain +=
+          randomBetween(
+            5,
+            15
+          );
+
+      }
+
+
+      /*
+        하루에 너무 빠르게
+        올라가지 않도록 제한
+      */
+
+      return Math.min(
+        gain,
+        35
+      );
+
+    }
+
+
+    /*
+      ========================================
+      애정도 저장
+      ========================================
+    */
+
+    function increaseAffection(
+      message
+    ) {
+
+      const gain =
+        calculateAffectionGain(
+          message
+        );
+
+
+      affection =
+        Math.min(
+          10000,
+          affection + gain
+        );
+
+
+      localStorage.setItem(
+        "wednesday_affection",
+        affection
+      );
+
+
+      updateAffectionDisplay();
+
+    }
+
+
+    /*
+      ========================================
+      분위기 판단
+      ========================================
+    */
+
+    function detectMood(
+      message
+    ) {
+
+      const text =
+        message.toLowerCase();
+
+
+      if (
+        /힘들|속상|슬프|외롭|불안|걱정|무서|후회|미안/.test(
+          text
+        )
+      ) {
+
+        return "serious";
+
+      }
+
+
+      if (
+        /ㅋㅋ|ㅎㅎ|웃|재밌|웃겨|장난|농담/.test(
+          text
+        )
+      ) {
+
+        return "playful";
+
+      }
+
+
+      if (
+        /좋아|기뻐|신나|행복|대박|최고/.test(
+          text
+        )
+      ) {
+
+        return "warm";
+
+      }
+
+
+      if (
+        /왜|어떻게|진짜|솔직히|너는|너라면/.test(
+          text
+        )
+      ) {
+
+        return "thoughtful";
+
+      }
+
+
+      return [
+        "calm",
+        "warm",
+        "curious",
+        "playful"
+      ][
+        randomBetween(
+          0,
+          3
+        )
+      ];
+
+    }
+
+
+    /*
+      ========================================
+      생각하는 시간
+      ========================================
+    */
+
+    function getThinkingDelay(
+      message
+    ) {
+
+      const text =
+        message.trim();
+
+
+      const serious =
+        /어떻게 생각해|너라면|그만둘까|헤어질까|퇴사|결정|선택|미래|후회|힘들|불안|무서|걱정/.test(
+          text
+        );
+
+
+      const surprising =
+        /솔직히|사실|진짜|너는 나를|나를 어떻게|비밀|고백|좋아해|사랑해|기억해/.test(
+          text
+        );
+
+
+      const emotional =
+        /화나|짜증|슬퍼|외로|미안|속상|답답|힘들|불안|무서/.test(
+          text
+        );
+
+
+      if (
+        serious ||
+        surprising
+      ) {
+
+        return randomBetween(
+          1600,
+          3200
+        );
+
+      }
+
+
+      if (
+        emotional
+      ) {
+
+        return randomBetween(
+          1300,
+          2600
+        );
+
+      }
+
+
+      if (
+        text.length > 100
+      ) {
+
+        return randomBetween(
+          900,
+          1900
+        );
+
+      }
+
+
+      if (
+        text.length > 50
+      ) {
+
+        return randomBetween(
+          700,
+          1500
+        );
+
+      }
+
+
+      return randomBetween(
+        400,
+        1200
+      );
+
+    }
+
+
+    /*
+      ========================================
+      기존 요청 취소
+      ========================================
     */
 
     function cancelActiveRequest() {
@@ -365,6 +723,7 @@
         return;
       }
 
+
       try {
 
         activeRequest.controller.abort();
@@ -372,7 +731,6 @@
       } catch (error) {
 
         console.warn(
-          "기존 요청 취소 중 오류:",
           error
         );
 
@@ -395,40 +753,46 @@
 
 
     /*
-      --------------------------------
+      ========================================
       AI 말풍선 생성
-      --------------------------------
+      ========================================
     */
 
-    function createAiMessage(chat) {
+    function createAiMessage(
+      chat
+    ) {
 
       const aiMessage =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       aiMessage.className =
         "message ai";
 
+
       const aiBubble =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       aiBubble.className =
         "bubble";
+
 
       aiMessage.appendChild(
         aiBubble
       );
 
-      /*
-        처음에는 안 보임.
-        AI 답변이 완성된 후 나타남.
-      */
 
       aiMessage.style.display =
         "none";
 
+
       chat.appendChild(
         aiMessage
       );
+
 
       return {
         aiMessage,
@@ -439,30 +803,36 @@
 
 
     /*
-      --------------------------------
-      AI 답변을 화면에 표시
-      --------------------------------
+      ========================================
+      AI 답변 표시
+      ========================================
     */
 
     function showAiMessage(
       aiMessage,
       aiBubble,
-      text
+      text,
+      chat
     ) {
 
       aiBubble.textContent =
         text;
 
+
       aiMessage.style.display =
         "flex";
+
+
+      chat.scrollTop =
+        chat.scrollHeight;
 
     }
 
 
     /*
-      --------------------------------
-      메인 함수
-      --------------------------------
+      ========================================
+      메시지 보내기
+      ========================================
     */
 
     async function sendMessage() {
@@ -472,31 +842,35 @@
           "messageInput"
         );
 
+
       const chat =
         document.getElementById(
           "chat"
         );
 
+
       const message =
         input.value.trim();
 
 
-      if (message === "") {
+      if (!message) {
         return;
       }
 
 
       /*
-        이전 AI가 아직 답변 중이면
-        그 요청을 취소.
+        이전 AI 응답이 있으면 취소
       */
 
       if (activeRequest) {
+
         cancelActiveRequest();
+
       }
 
 
       requestSequence++;
+
 
       const currentRequestId =
         requestSequence;
@@ -507,17 +881,22 @@
       */
 
       const userMessage =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       userMessage.className =
         "message user";
 
 
       const userBubble =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       userBubble.className =
         "bubble";
+
 
       userBubble.textContent =
         message;
@@ -526,6 +905,7 @@
       userMessage.appendChild(
         userBubble
       );
+
 
       chat.appendChild(
         userMessage
@@ -536,12 +916,38 @@
 
       input.focus();
 
+
       chat.scrollTop =
         chat.scrollHeight;
 
 
       /*
-        대화 기록에 저장
+        분위기 변경
+      */
+
+      currentMood =
+        detectMood(
+          message
+        );
+
+
+      localStorage.setItem(
+        "wednesday_mood",
+        currentMood
+      );
+
+
+      /*
+        애정도 증가
+      */
+
+      increaseAffection(
+        message
+      );
+
+
+      /*
+        대화 기록 저장
       */
 
       conversationHistory.push({
@@ -551,13 +957,16 @@
 
 
       /*
-        AI 말풍선은 아직 숨김.
+        AI 말풍선은 숨긴 상태
       */
 
       const {
         aiMessage,
         aiBubble
-      } = createAiMessage(chat);
+      } =
+        createAiMessage(
+          chat
+        );
 
 
       const controller =
@@ -592,22 +1001,22 @@
 
                 message,
 
-                /*
-                  지금 방금 보낸 메시지는
-                  Worker가 message로 따로 받으므로
-                  history에는 넣지 않음.
-                */
-
                 history:
                   conversationHistory.slice(
                     0,
                     -1
-                  )
+                  ),
+
+                affection,
+
+                mood:
+                  currentMood
 
               }),
 
               signal:
                 controller.signal
+
             }
           );
 
@@ -616,7 +1025,9 @@
           currentRequestId !==
           requestSequence
         ) {
+
           return;
+
         }
 
 
@@ -624,6 +1035,7 @@
 
           const errorText =
             await response.text();
+
 
           throw new Error(
             errorText ||
@@ -643,22 +1055,19 @@
 
 
         /*
-          --------------------------------
-          여기서부터 중요한 부분
-
-          스트리밍 데이터를 받기는 하지만
-          화면에는 절대 바로 보여주지 않는다.
-
-          답변 전체를 받을 때까지
-          화면은 그대로 유지.
-          --------------------------------
+          ====================================
+          스트리밍은 받지만 화면에는 안 보여줌
+          ====================================
         */
 
         const reader =
           response.body.getReader();
 
+
         const decoder =
-          new TextDecoder("utf-8");
+          new TextDecoder(
+            "utf-8"
+          );
 
 
         let buffer = "";
@@ -681,7 +1090,9 @@
             currentRequestId !==
             requestSequence
           ) {
+
             return;
+
           }
 
 
@@ -720,7 +1131,9 @@
                 "data:"
               )
             ) {
+
               continue;
+
             }
 
 
@@ -738,14 +1151,18 @@
             if (
               data === "[DONE]"
             ) {
+
               continue;
+
             }
 
 
             try {
 
               const parsed =
-                JSON.parse(data);
+                JSON.parse(
+                  data
+                );
 
 
               const token =
@@ -762,19 +1179,23 @@
 
 
               /*
-                여기서는 화면에
-                절대로 출력하지 않음.
+                핵심:
 
-                전부 모아서 하나의 답변으로 만든다.
+                여기서 화면에
+                아무것도 출력하지 않는다.
+
+                답변 전체를 모은다.
               */
 
-              fullReply += token;
+              fullReply +=
+                token;
 
-            } catch (parseError) {
+
+            } catch (error) {
 
               console.warn(
-                "스트림 데이터 처리 오류:",
-                parseError
+                "응답 처리 오류:",
+                error
               );
 
             }
@@ -785,16 +1206,18 @@
 
 
         /*
-          --------------------------------
+          ====================================
           답변 완성
-          --------------------------------
+          ====================================
         */
 
         if (
           currentRequestId !==
           requestSequence
         ) {
+
           return;
+
         }
 
 
@@ -807,7 +1230,8 @@
           showAiMessage(
             aiMessage,
             aiBubble,
-            "음… 잠깐만요."
+            "음… 잠깐만요.",
+            chat
           );
 
           return;
@@ -816,17 +1240,15 @@
 
 
         /*
-          --------------------------------
-          답변을 받은 뒤에도
-          바로 보여주지 않고 잠깐 기다림.
-
-          사람이 바로 대답하지 않고
-          생각한 뒤 말하는 느낌.
-          --------------------------------
+          ====================================
+          사람처럼 잠깐 생각
+          ====================================
         */
 
         const thinkingDelay =
-          getThinkingDelay(message);
+          getThinkingDelay(
+            message
+          );
 
 
         await sleep(
@@ -839,29 +1261,28 @@
           currentRequestId !==
           requestSequence
         ) {
+
           return;
+
         }
 
 
         /*
-          --------------------------------
+          ====================================
           완성된 답변을 한 번에 표시
-          --------------------------------
+          ====================================
         */
 
         showAiMessage(
           aiMessage,
           aiBubble,
-          finalReply
+          finalReply,
+          chat
         );
 
 
-        chat.scrollTop =
-          chat.scrollHeight;
-
-
         /*
-          완성된 답변만 기억.
+          완성된 답변만 기록
         */
 
         conversationHistory.push({
@@ -874,15 +1295,16 @@
 
         /*
           사용자가 새 메시지를 보내서
-          기존 요청이 취소된 경우에는
-          아무것도 표시하지 않음.
+          이전 요청이 취소된 경우
         */
 
         if (
           error.name ===
           "AbortError"
         ) {
+
           return;
+
         }
 
 
@@ -890,16 +1312,19 @@
           currentRequestId !==
           requestSequence
         ) {
+
           return;
+
         }
 
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
         /*
-          실패한 사용자 메시지는
-          대화 기록에서 제거.
+          실패한 사용자 메시지 제거
         */
 
         if (
@@ -918,7 +1343,8 @@
         showAiMessage(
           aiMessage,
           aiBubble,
-          "잠깐 문제가 생겼어요.\n조금 있다가 다시 말해 주세요."
+          "잠깐 문제가 생겼어요.\n조금 있다가 다시 말해 주세요.",
+          chat
         );
 
 
@@ -937,6 +1363,7 @@
 
         input.focus();
 
+
         chat.scrollTop =
           chat.scrollHeight;
 
@@ -946,13 +1373,15 @@
 
 
     /*
-      --------------------------------
+      ========================================
       Enter 키
-      --------------------------------
+      ========================================
     */
 
     document
-      .getElementById("messageInput")
+      .getElementById(
+        "messageInput"
+      )
       .addEventListener(
         "keydown",
         function(event) {
