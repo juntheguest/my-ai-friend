@@ -7,21 +7,25 @@
     content="width=device-width, initial-scale=1.0"
   />
   <title>웬즈데이</title>
-  <style>
-    * { box-sizing: border-box; }
 
-    html, body {
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #f4f4f5;
       font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         "Noto Sans KR",
         sans-serif;
+      background: #b2c7d9;
     }
 
     body {
@@ -33,22 +37,24 @@
       width: 100%;
       max-width: 760px;
       height: 100vh;
-      background: #ffffff;
       display: flex;
       flex-direction: column;
-      box-shadow:
-        0 0 30px rgba(0, 0, 0, 0.08);
+      background: #b2c7d9;
+      overflow: hidden;
     }
+
+    /* -----------------------------
+       상단
+    ----------------------------- */
 
     .header {
       height: 64px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      border-bottom: 1px solid #eeeeee;
-      background: #ffffff;
+      padding: 0 16px;
+      background: #fee500;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .header-left {
@@ -58,16 +64,17 @@
     }
 
     .avatar {
-      width: 38px;
-      height: 38px;
+      width: 39px;
+      height: 39px;
+      flex-shrink: 0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #171717;
-      color: white;
+      background: #222222;
+      color: #fee500;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .name {
@@ -79,17 +86,21 @@
     .status {
       margin-top: 2px;
       font-size: 11px;
-      color: #999999;
+      color: rgba(0, 0, 0, 0.55);
     }
+
+    /* -----------------------------
+       채팅
+    ----------------------------- */
 
     .chat {
       flex: 1;
       overflow-y: auto;
-      padding: 22px 16px 28px;
+      padding: 18px 14px 22px;
       display: flex;
       flex-direction: column;
-      gap: 9px;
-      background: #f7f7f8;
+      gap: 8px;
+      background: #b2c7d9;
     }
 
     .message-row {
@@ -107,32 +118,30 @@
 
     .bubble {
       max-width: min(78%, 560px);
-      padding: 10px 13px;
-      border-radius: 16px;
+      padding: 9px 12px;
+      border-radius: 12px;
       font-size: 14px;
       line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
+      box-shadow:
+        0 1px 1px rgba(0, 0, 0, 0.04);
     }
 
+    /* 사용자 = 카카오톡 노란색 */
+
     .user .bubble {
-      background: #222222;
-      color: #ffffff;
-      border-bottom-right-radius: 5px;
+      background: #fee500;
+      color: #222222;
+      border-top-right-radius: 3px;
     }
+
+    /* 웬즈데이 = 흰색 */
 
     .assistant .bubble {
       background: #ffffff;
       color: #222222;
-      border: 1px solid #eeeeee;
-      border-bottom-left-radius: 5px;
-    }
-
-    .proactive-label {
-      font-size: 10px;
-      color: #aaaaaa;
-      margin-left: 4px;
-      margin-bottom: 3px;
+      border-top-left-radius: 3px;
     }
 
     .assistant-wrap {
@@ -141,15 +150,25 @@
       align-items: flex-start;
     }
 
+    .proactive-label {
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.45);
+      margin-left: 3px;
+      margin-bottom: 3px;
+    }
+
+    /* -----------------------------
+       타이핑
+    ----------------------------- */
+
     .typing {
       display: none;
       align-items: center;
       gap: 4px;
-      padding: 11px 14px;
+      padding: 10px 13px;
       background: #ffffff;
-      border: 1px solid #eeeeee;
-      border-radius: 16px;
-      border-bottom-left-radius: 5px;
+      border-radius: 12px;
+      border-top-left-radius: 3px;
     }
 
     .typing.show {
@@ -159,7 +178,7 @@
     .dot {
       width: 5px;
       height: 5px;
-      background: #999999;
+      background: #888888;
       border-radius: 50%;
       animation:
         blink 1.2s infinite ease-in-out;
@@ -174,7 +193,9 @@
     }
 
     @keyframes blink {
-      0%, 60%, 100% {
+      0%,
+      60%,
+      100% {
         opacity: 0.3;
       }
 
@@ -183,14 +204,18 @@
       }
     }
 
+    /* -----------------------------
+       입력창
+    ----------------------------- */
+
     .composer {
       flex-shrink: 0;
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      padding: 10px 12px;
-      background: #ffffff;
-      border-top: 1px solid #eeeeee;
+      padding: 9px 10px;
+      background: #eeeeee;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     textarea {
@@ -198,41 +223,42 @@
       resize: none;
       min-height: 42px;
       max-height: 130px;
-      padding: 11px 13px;
+      padding: 10px 12px;
       border: 1px solid #dddddd;
-      border-radius: 18px;
+      border-radius: 5px;
       outline: none;
       font-family: inherit;
       font-size: 14px;
       line-height: 1.4;
-      background: #fafafa;
+      background: #ffffff;
     }
 
     textarea:focus {
-      border-color: #bbbbbb;
-      background: #ffffff;
+      border-color: #cccccc;
     }
 
     button {
       width: 42px;
       height: 42px;
+      flex-shrink: 0;
       border: none;
-      border-radius: 50%;
-      background: #222222;
-      color: #ffffff;
+      border-radius: 5px;
+      background: #fee500;
+      color: #222222;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 17px;
+      font-weight: 700;
     }
 
     button:disabled {
-      opacity: 0.35;
+      opacity: 0.4;
       cursor: default;
     }
 
     .empty {
       margin: auto;
       text-align: center;
-      color: #999999;
+      color: rgba(0, 0, 0, 0.42);
       font-size: 13px;
       line-height: 1.6;
     }
@@ -254,6 +280,7 @@
 <div class="app">
 
   <header class="header">
+
     <div class="header-left">
 
       <div class="avatar">W</div>
@@ -264,18 +291,30 @@
       </div>
 
     </div>
+
   </header>
 
-  <main class="chat" id="chat">
 
-    <div class="empty" id="empty">
+  <main
+    class="chat"
+    id="chat"
+  >
+
+    <div
+      class="empty"
+      id="empty"
+    >
       잠깐만요.<br />
       대화를 불러오는 중이에요.
     </div>
 
   </main>
 
-  <form class="composer" id="composer">
+
+  <form
+    class="composer"
+    id="composer"
+  >
 
     <textarea
       id="input"
@@ -292,10 +331,12 @@
 
 </div>
 
+
 <script>
 
 const API =
   "https://my-ai-friend-api.juntheguest.workers.dev";
+
 
 const chat =
   document.getElementById("chat");
@@ -314,12 +355,11 @@ const empty =
 
 
 let waiting = false;
-
 let waitingTimer = null;
 
 
 /* -----------------------------
-   기본 화면 처리
+   기본 화면
 ----------------------------- */
 
 function removeEmpty() {
@@ -344,7 +384,7 @@ function scrollBottom() {
 
 
 /* -----------------------------
-   메시지 추가
+   메시지 표시
 ----------------------------- */
 
 function addMessage(
@@ -354,6 +394,7 @@ function addMessage(
 ) {
 
   removeEmpty();
+
 
   const row =
     document.createElement("div");
@@ -396,8 +437,8 @@ function addMessage(
     bubble.textContent =
       content;
 
-    wrap.appendChild(bubble);
 
+    wrap.appendChild(bubble);
     row.appendChild(wrap);
 
   } else {
@@ -410,6 +451,7 @@ function addMessage(
 
     bubble.textContent =
       content;
+
 
     row.appendChild(bubble);
 
@@ -463,10 +505,9 @@ function showTyping() {
 
 
   wrap.appendChild(typing);
-
   row.appendChild(wrap);
-
   chat.appendChild(row);
+
 
   scrollBottom();
 
@@ -480,6 +521,7 @@ function hideTyping() {
       "typing-row"
     );
 
+
   if (typing) {
     typing.remove();
   }
@@ -488,7 +530,7 @@ function hideTyping() {
 
 
 /* -----------------------------
-   대화 기록 불러오기
+   대화 기록
 ----------------------------- */
 
 async function loadHistory() {
@@ -502,9 +544,11 @@ async function loadHistory() {
 
 
     if (!response.ok) {
+
       throw new Error(
         "history failed"
       );
+
     }
 
 
@@ -519,10 +563,14 @@ async function loadHistory() {
       data.messages || [];
 
 
-    if (messages.length === 0) {
+    if (
+      messages.length === 0
+    ) {
 
       const welcome =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       welcome.className =
         "empty";
@@ -530,7 +578,10 @@ async function loadHistory() {
       welcome.textContent =
         "이제 이야기를 시작해볼까요?";
 
-      chat.appendChild(welcome);
+
+      chat.appendChild(
+        welcome
+      );
 
     } else {
 
@@ -539,6 +590,7 @@ async function loadHistory() {
       ) {
 
         addMessage(
+
           message.role === "user"
             ? "user"
             : "assistant",
@@ -548,6 +600,7 @@ async function loadHistory() {
           Boolean(
             message.proactive
           )
+
         );
 
       }
@@ -564,7 +617,9 @@ async function loadHistory() {
 
 
     const errorBox =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     errorBox.className =
       "empty";
@@ -573,7 +628,9 @@ async function loadHistory() {
       "대화를 불러오지 못했어요.";
 
 
-    chat.appendChild(errorBox);
+    chat.appendChild(
+      errorBox
+    );
 
 
     console.error(error);
@@ -584,13 +641,14 @@ async function loadHistory() {
 
 
 /* -----------------------------
-   자연스러운 응답 대기시간
+   자연스러운 대기시간
 ----------------------------- */
 
 function getNaturalDelay(text) {
 
   const length =
     text.length;
+
 
   let min;
   let max;
@@ -644,14 +702,8 @@ async function sendMessage(message) {
   waiting = true;
 
   send.disabled = true;
-
   input.disabled = true;
 
-
-  /*
-    화면에는 사용자의 메시지를
-    바로 표시한다.
-  */
 
   addMessage(
     "user",
@@ -678,6 +730,7 @@ async function sendMessage(message) {
           body: JSON.stringify({
             message
           })
+
         }
       );
 
@@ -712,8 +765,8 @@ async function sendMessage(message) {
 
 
     /*
-      웬즈데이가 실제 답변을
-      완성한 뒤 자연스럽게 기다린다.
+      웬즈데이가 답변을 완성한 뒤
+      잠깐 기다렸다가 한 번에 보여준다.
     */
 
     const delay =
@@ -740,7 +793,7 @@ async function sendMessage(message) {
 
     /*
       /redsun이어도 화면의 기존 대화는
-      지우지 않는다.
+      삭제하지 않는다.
     */
 
     addMessage(
@@ -767,7 +820,6 @@ async function sendMessage(message) {
     waiting = false;
 
     send.disabled = false;
-
     input.disabled = false;
 
     input.focus();
@@ -778,7 +830,7 @@ async function sendMessage(message) {
 
 
 /* -----------------------------
-   웬즈데이의 먼저 보내기
+   먼저 연락하기
 ----------------------------- */
 
 async function checkProactive() {
@@ -830,7 +882,7 @@ async function checkProactive() {
 
 
 /* -----------------------------
-   전송 버튼
+   전송
 ----------------------------- */
 
 composer.addEventListener(
@@ -864,7 +916,7 @@ composer.addEventListener(
 
 
 /* -----------------------------
-   Enter 전송
+   Enter
 ----------------------------- */
 
 input.addEventListener(
@@ -887,7 +939,7 @@ input.addEventListener(
 
 
 /* -----------------------------
-   입력창 자동 높이 조절
+   입력창 높이
 ----------------------------- */
 
 input.addEventListener(
@@ -916,8 +968,7 @@ loadHistory();
 
 
 /*
-  1분마다 웬즈데이가
-  먼저 말을 걸었는지 확인한다.
+  1분마다 먼저 연락 여부 확인
 */
 
 setInterval(
