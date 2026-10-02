@@ -7,14 +7,10 @@
     content="width=device-width, initial-scale=1.0"
   />
   <title>웬즈데이</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -84,12 +80,6 @@
       margin-top: 2px;
       font-size: 11px;
       color: #999999;
-    }
-
-    .affection {
-      font-size: 11px;
-      color: #999999;
-      text-align: right;
     }
 
     .chat {
@@ -184,9 +174,7 @@
     }
 
     @keyframes blink {
-      0%,
-      60%,
-      100% {
+      0%, 60%, 100% {
         opacity: 0.3;
       }
 
@@ -266,57 +254,28 @@
 <div class="app">
 
   <header class="header">
-
     <div class="header-left">
 
-      <div class="avatar">
-        W
-      </div>
+      <div class="avatar">W</div>
 
       <div>
-
-        <div class="name">
-          웬즈데이
-        </div>
-
-        <div class="status">
-          당신의 AI 친구
-        </div>
-
+        <div class="name">웬즈데이</div>
+        <div class="status">당신의 AI 친구</div>
       </div>
 
     </div>
-
-    <div
-      class="affection"
-      id="affection"
-    >
-      친밀도 0
-    </div>
-
   </header>
 
+  <main class="chat" id="chat">
 
-  <main
-    class="chat"
-    id="chat"
-  >
-
-    <div
-      class="empty"
-      id="empty"
-    >
+    <div class="empty" id="empty">
       잠깐만요.<br />
       대화를 불러오는 중이에요.
     </div>
 
   </main>
 
-
-  <form
-    class="composer"
-    id="composer"
-  >
+  <form class="composer" id="composer">
 
     <textarea
       id="input"
@@ -327,20 +286,16 @@
     <button
       id="send"
       type="submit"
-    >
-      ↑
-    </button>
+    >↑</button>
 
   </form>
 
 </div>
 
-
 <script>
 
 const API =
   "https://my-ai-friend-api.juntheguest.workers.dev";
-
 
 const chat =
   document.getElementById("chat");
@@ -357,14 +312,15 @@ const composer =
 const empty =
   document.getElementById("empty");
 
-const affection =
-  document.getElementById("affection");
-
 
 let waiting = false;
 
 let waitingTimer = null;
 
+
+/* -----------------------------
+   기본 화면 처리
+----------------------------- */
 
 function removeEmpty() {
 
@@ -386,6 +342,10 @@ function scrollBottom() {
 
 }
 
+
+/* -----------------------------
+   메시지 추가
+----------------------------- */
 
 function addMessage(
   role,
@@ -463,6 +423,10 @@ function addMessage(
 }
 
 
+/* -----------------------------
+   타이핑 표시
+----------------------------- */
+
 function showTyping() {
 
   hideTyping();
@@ -490,7 +454,6 @@ function showTyping() {
 
   typing.className =
     "typing show";
-
 
   typing.innerHTML = `
     <span class="dot"></span>
@@ -524,21 +487,9 @@ function hideTyping() {
 }
 
 
-function updateAffection(value) {
-
-  if (
-    typeof value !==
-    "number"
-  ) {
-    return;
-  }
-
-
-  affection.textContent =
-    `친밀도 ${value.toLocaleString()}`;
-
-}
-
+/* -----------------------------
+   대화 기록 불러오기
+----------------------------- */
 
 async function loadHistory() {
 
@@ -568,14 +519,10 @@ async function loadHistory() {
       data.messages || [];
 
 
-    if (
-      messages.length === 0
-    ) {
+    if (messages.length === 0) {
 
       const welcome =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
       welcome.className =
         "empty";
@@ -588,12 +535,10 @@ async function loadHistory() {
     } else {
 
       for (
-        const message
-        of messages
+        const message of messages
       ) {
 
         addMessage(
-
           message.role === "user"
             ? "user"
             : "assistant",
@@ -603,24 +548,9 @@ async function loadHistory() {
           Boolean(
             message.proactive
           )
-
         );
 
       }
-
-    }
-
-
-    if (data.state) {
-
-      updateAffection(
-
-        Number(
-          data.state.affection ||
-          0
-        )
-
-      );
 
     }
 
@@ -634,9 +564,7 @@ async function loadHistory() {
 
 
     const errorBox =
-      document.createElement(
-        "div"
-      );
+      document.createElement("div");
 
     errorBox.className =
       "empty";
@@ -644,9 +572,8 @@ async function loadHistory() {
     errorBox.textContent =
       "대화를 불러오지 못했어요.";
 
-    chat.appendChild(
-      errorBox
-    );
+
+    chat.appendChild(errorBox);
 
 
     console.error(error);
@@ -656,9 +583,11 @@ async function loadHistory() {
 }
 
 
-function getNaturalDelay(
-  text
-) {
+/* -----------------------------
+   자연스러운 응답 대기시간
+----------------------------- */
+
+function getNaturalDelay(text) {
 
   const length =
     text.length;
@@ -672,16 +601,12 @@ function getNaturalDelay(
     min = 700;
     max = 1800;
 
-  } else if (
-    length < 40
-  ) {
+  } else if (length < 40) {
 
     min = 900;
     max = 2400;
 
-  } else if (
-    length < 100
-  ) {
+  } else if (length < 100) {
 
     min = 1300;
     max = 3200;
@@ -695,18 +620,18 @@ function getNaturalDelay(
 
 
   return Math.floor(
-
     Math.random() *
       (max - min + 1)
-
   ) + min;
 
 }
 
 
-async function sendMessage(
-  message
-) {
+/* -----------------------------
+   메시지 전송
+----------------------------- */
+
+async function sendMessage(message) {
 
   if (
     !message ||
@@ -722,6 +647,11 @@ async function sendMessage(
 
   input.disabled = true;
 
+
+  /*
+    화면에는 사용자의 메시지를
+    바로 표시한다.
+  */
 
   addMessage(
     "user",
@@ -745,10 +675,9 @@ async function sendMessage(
               "application/json"
           },
 
-          body:
-            JSON.stringify({
-              message
-            })
+          body: JSON.stringify({
+            message
+          })
         }
       );
 
@@ -763,30 +692,6 @@ async function sendMessage(
         data.error ||
         "server error"
       );
-
-    }
-
-
-    /*
-      /redsun을 실행해도
-      현재 화면의 대화는
-      삭제하지 않습니다.
-
-      DB만 초기화됩니다.
-    */
-
-    if (data.reset) {
-
-      hideTyping();
-
-      updateAffection(0);
-
-      addMessage(
-        "assistant",
-        data.reply
-      );
-
-      return;
 
     }
 
@@ -806,14 +711,10 @@ async function sendMessage(
     }
 
 
-    updateAffection(
-
-      Number(
-        data.affection || 0
-      )
-
-    );
-
+    /*
+      웬즈데이가 실제 답변을
+      완성한 뒤 자연스럽게 기다린다.
+    */
 
     const delay =
       getNaturalDelay(
@@ -837,6 +738,11 @@ async function sendMessage(
     hideTyping();
 
 
+    /*
+      /redsun이어도 화면의 기존 대화는
+      지우지 않는다.
+    */
+
     addMessage(
       "assistant",
       reply
@@ -849,28 +755,20 @@ async function sendMessage(
 
 
     addMessage(
-
       "assistant",
-
       "잠깐 문제가 생겼어요. 다시 한번 보내주세요."
-
     );
 
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
   } finally {
 
     waiting = false;
 
-    send.disabled =
-      false;
+    send.disabled = false;
 
-    input.disabled =
-      false;
+    input.disabled = false;
 
     input.focus();
 
@@ -878,6 +776,10 @@ async function sendMessage(
 
 }
 
+
+/* -----------------------------
+   웬즈데이의 먼저 보내기
+----------------------------- */
 
 async function checkProactive() {
 
@@ -907,13 +809,9 @@ async function checkProactive() {
     ) {
 
       addMessage(
-
         "assistant",
-
         data.message,
-
         true
-
       );
 
     }
@@ -930,6 +828,10 @@ async function checkProactive() {
 
 }
 
+
+/* -----------------------------
+   전송 버튼
+----------------------------- */
 
 composer.addEventListener(
   "submit",
@@ -961,6 +863,10 @@ composer.addEventListener(
 );
 
 
+/* -----------------------------
+   Enter 전송
+----------------------------- */
+
 input.addEventListener(
   "keydown",
   event => {
@@ -980,6 +886,10 @@ input.addEventListener(
 );
 
 
+/* -----------------------------
+   입력창 자동 높이 조절
+----------------------------- */
+
 input.addEventListener(
   "input",
   () => {
@@ -998,8 +908,17 @@ input.addEventListener(
 );
 
 
+/* -----------------------------
+   시작
+----------------------------- */
+
 loadHistory();
 
+
+/*
+  1분마다 웬즈데이가
+  먼저 말을 걸었는지 확인한다.
+*/
 
 setInterval(
   checkProactive,
