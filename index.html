@@ -59,11 +59,12 @@
     }
 
     .bubble {
-      max-width: 90%;
+      max-width: 88%;
       padding: 12px 15px;
       border-radius: 15px;
       line-height: 1.6;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .ai .bubble {
@@ -120,13 +121,12 @@
       <div class="message ai">
         <div class="bubble">안녕하세요. 저는 웬즈데이입니다.
 
-편하게 말씀해 주세요. 일상적인 이야기든, 업무에 관한 일이든 함께 살펴보겠습니다.</div>
+편하게 말씀해 주세요.</div>
       </div>
 
     </div>
 
     <div class="input-area">
-
       <input
         id="messageInput"
         type="text"
@@ -140,7 +140,6 @@
       >
         전송
       </button>
-
     </div>
 
   </div>
@@ -151,87 +150,60 @@
     const API_URL =
       "https://my-ai-friend-api.juntheguest.workers.dev/";
 
-
-    /*
-      현재 대화 기록
-
-      페이지를 새로고침하면 초기화됩니다.
-      나중에 Cloudflare 저장소를 연결하면
-      장기 기억으로 확장할 수 있습니다.
-    */
     const conversationHistory = [];
 
-
-    /*
-      현재 AI 요청을 관리합니다.
-
-      웬즈데이가 답변하는 도중
-      사용자가 새로운 말을 하면
-      기존 요청을 취소하고
-      최신 메시지 기준으로 다시 요청합니다.
-    */
     let activeRequest = null;
-
     let requestSequence = 0;
 
 
     /*
-      랜덤 숫자를 만듭니다.
+      --------------------------------
+      기본 유틸리티
+      --------------------------------
     */
-    function randomBetween(min, max) {
 
+    function randomBetween(min, max) {
       return Math.floor(
         Math.random() * (max - min + 1)
       ) + min;
-
     }
 
 
-    /*
-      잠시 기다립니다.
-
-      AbortController로 취소할 수 있도록
-      일반적인 setTimeout보다 조금 더 안전하게 만듭니다.
-    */
     function sleep(ms, signal) {
 
       return new Promise((resolve, reject) => {
 
-        if (signal?.aborted) {
+        if (signal && signal.aborted) {
           reject(
             new DOMException(
               "요청이 취소되었습니다.",
               "AbortError"
             )
           );
-
           return;
         }
 
+        const timer = setTimeout(resolve, ms);
 
-        const timer =
-          setTimeout(resolve, ms);
+        if (signal) {
 
+          const abortHandler = () => {
+            clearTimeout(timer);
 
-        const abortHandler = () => {
+            reject(
+              new DOMException(
+                "요청이 취소되었습니다.",
+                "AbortError"
+              )
+            );
+          };
 
-          clearTimeout(timer);
-
-          reject(
-            new DOMException(
-              "요청이 취소되었습니다.",
-              "AbortError"
-            )
+          signal.addEventListener(
+            "abort",
+            abortHandler,
+            { once: true }
           );
-
-        };
-
-
-        signal?.addEventListener(
-          "abort",
-          abortHandler,
-          { once: true }
-        );
+        }
 
       });
 
@@ -239,99 +211,121 @@
 
 
     /*
-      사용자의 메시지를 보고
-      답변을 시작하기 전의 자연스러운
-      대기 시간을 정합니다.
+      --------------------------------
+      생각하는 시간
+      --------------------------------
 
-      매번 같은 시간이 나오지 않습니다.
+      항상 똑같이 기다리지 않음.
+
+      가벼운 말
+      → 짧게
+
+      중요한 질문
+      → 조금 길게
+
+      감정적인 이야기
+      → 조금 더 길게
     */
+
     function getThinkingDelay(message) {
 
-      const text =
-        message.trim();
+      const text = message.trim();
 
-
-      /*
-        예상 밖이거나 조금 더 신중하게
-        반응할 가능성이 있는 표현들
-      */
-      const surprisingPatterns = [
-
-        "왜",
-        "만약",
-        "솔직히",
-        "사실",
+      const seriousPatterns = [
         "어떻게 생각해",
-        "너는",
         "너라면",
-        "기억해",
-        "미안",
-        "좋아해",
-        "싫어",
-        "당황",
-        "고백",
-        "비밀",
-        "진짜로",
-        "솔직하게",
-        "어떻게 생각",
-        "무슨 생각",
-
+        "내가 잘못",
+        "그만둘까",
+        "헤어질까",
+        "결혼",
+        "이혼",
+        "돈",
+        "퇴사",
+        "미래",
+        "결정",
+        "선택",
+        "후회",
+        "왜 살아",
+        "살기 싫",
+        "죽고",
+        "힘들어",
+        "불안해",
+        "무서워",
+        "걱정돼",
+        "속상해"
       ];
 
+      const surprisingPatterns = [
+        "솔직히",
+        "사실",
+        "진짜",
+        "너는 나를",
+        "나를 어떻게",
+        "비밀",
+        "고백",
+        "좋아해",
+        "사랑해",
+        "싫어",
+        "너라면",
+        "기억해"
+      ];
 
       const emotionalPatterns = [
-
-        "힘들",
-        "속상",
         "화나",
         "짜증",
-        "무서",
-        "불안",
-        "걱정",
         "슬퍼",
         "외로",
         "미안",
         "후회",
+        "답답",
+        "힘들",
+        "불안",
+        "무서",
         "좋아",
-        "사랑",
-
+        "사랑"
       ];
 
+      const isSerious =
+        seriousPatterns.some(word =>
+          text.includes(word)
+        );
 
       const isSurprising =
-        surprisingPatterns.some(
-          word => text.includes(word)
+        surprisingPatterns.some(word =>
+          text.includes(word)
         );
-
 
       const isEmotional =
-        emotionalPatterns.some(
-          word => text.includes(word)
+        emotionalPatterns.some(word =>
+          text.includes(word)
         );
 
 
-      /*
-        예상 밖의 질문이나
-        감정적으로 중요한 이야기
-      */
-      if (isSurprising || isEmotional) {
+      if (isSerious || isSurprising) {
 
         return randomBetween(
-          1300,
-          2800
+          1500,
+          3000
         );
 
       }
 
 
-      /*
-        긴 메시지는 조금 더 생각할 시간을 줍니다.
-      */
+      if (isEmotional) {
+
+        return randomBetween(
+          1200,
+          2400
+        );
+
+      }
+
+
       if (text.length > 100) {
 
         return randomBetween(
           900,
-          1900
+          1800
         );
 
       }
@@ -340,174 +334,42 @@
       if (text.length > 50) {
 
         return randomBetween(
-          700,
-          1500
+          650,
+          1400
         );
 
       }
 
 
       /*
-        평범한 대화도
-        매번 같은 속도로 시작하지 않습니다.
+        짧은 대화는 너무 오래 기다리지 않음.
       */
+
       return randomBetween(
-        450,
-        1200
+        400,
+        1100
       );
 
     }
 
 
     /*
-      글자가 화면에 나타나는 속도도
-      완전히 일정하지 않게 만듭니다.
+      --------------------------------
+      현재 요청 취소
+      --------------------------------
     */
-    function getTypingDelay(character) {
 
-      /*
-        문장이 끝나는 곳에서는
-        사람이 잠깐 멈추는 느낌을 줍니다.
-      */
-      if (
-        character === "." ||
-        character === "!" ||
-        character === "?" ||
-        character === "。" ||
-        character === "！" ||
-        character === "？"
-      ) {
-
-        return randomBetween(
-          80,
-          220
-        );
-
-      }
-
-
-      /*
-        줄바꿈은 조금 더 긴 호흡
-      */
-      if (character === "\n") {
-
-        return randomBetween(
-          100,
-          280
-        );
-
-      }
-
-
-      /*
-        쉼표에서는 짧은 호흡
-      */
-      if (
-        character === "," ||
-        character === "，" ||
-        character === "、"
-      ) {
-
-        return randomBetween(
-          40,
-          130
-        );
-
-      }
-
-
-      /*
-        일반적인 글자는
-        아주 짧고 불규칙한 간격
-      */
-      return randomBetween(
-        12,
-        35
-      );
-
-    }
-
-
-    /*
-      현재 AI 말풍선을 만듭니다.
-
-      중요한 점:
-      처음에는 화면에 보이지 않습니다.
-
-      따라서 "작성 중..." 같은 표시가
-      사용자에게 보이지 않습니다.
-    */
-    function createHiddenAiMessage(chat) {
-
-      const aiMessage =
-        document.createElement("div");
-
-      aiMessage.className =
-        "message ai";
-
-
-      aiMessage.style.display =
-        "none";
-
-
-      const aiBubble =
-        document.createElement("div");
-
-      aiBubble.className =
-        "bubble";
-
-
-      aiMessage.appendChild(
-        aiBubble
-      );
-
-
-      chat.appendChild(
-        aiMessage
-      );
-
-
-      return {
-        aiMessage,
-        aiBubble
-      };
-
-    }
-
-
-    /*
-      AI 말풍선을 처음 보여줍니다.
-    */
-    function revealAiMessage(aiMessage) {
-
-      if (
-        aiMessage.style.display !== "flex"
-      ) {
-
-        aiMessage.style.display =
-          "flex";
-
-      }
-
-    }
-
-
-    /*
-      기존 AI 요청을 취소합니다.
-    */
     function cancelActiveRequest() {
 
       if (!activeRequest) {
         return;
       }
 
-
       try {
 
         activeRequest.controller.abort();
 
-      }
-      catch (error) {
+      } catch (error) {
 
         console.warn(
           "기존 요청 취소 중 오류:",
@@ -517,14 +379,6 @@
       }
 
 
-      /*
-        아직 화면에 표시되지 않은 답변은
-        완전히 제거합니다.
-
-        이미 일부가 표시되고 있었더라도
-        사용자가 새 말을 끼어들었다면
-        기존 답변을 없애고 새로운 흐름으로 넘어갑니다.
-      */
       if (
         activeRequest.aiMessage &&
         activeRequest.aiMessage.parentNode
@@ -541,8 +395,76 @@
 
 
     /*
-      사용자가 메시지를 보냅니다.
+      --------------------------------
+      AI 말풍선 생성
+      --------------------------------
     */
+
+    function createAiMessage(chat) {
+
+      const aiMessage =
+        document.createElement("div");
+
+      aiMessage.className =
+        "message ai";
+
+      const aiBubble =
+        document.createElement("div");
+
+      aiBubble.className =
+        "bubble";
+
+      aiMessage.appendChild(
+        aiBubble
+      );
+
+      /*
+        처음에는 안 보임.
+        AI 답변이 완성된 후 나타남.
+      */
+
+      aiMessage.style.display =
+        "none";
+
+      chat.appendChild(
+        aiMessage
+      );
+
+      return {
+        aiMessage,
+        aiBubble
+      };
+
+    }
+
+
+    /*
+      --------------------------------
+      AI 답변을 화면에 표시
+      --------------------------------
+    */
+
+    function showAiMessage(
+      aiMessage,
+      aiBubble,
+      text
+    ) {
+
+      aiBubble.textContent =
+        text;
+
+      aiMessage.style.display =
+        "flex";
+
+    }
+
+
+    /*
+      --------------------------------
+      메인 함수
+      --------------------------------
+    */
+
     async function sendMessage() {
 
       const input =
@@ -550,18 +472,10 @@
           "messageInput"
         );
 
-
-      const button =
-        document.getElementById(
-          "sendButton"
-        );
-
-
       const chat =
         document.getElementById(
           "chat"
         );
-
 
       const message =
         input.value.trim();
@@ -573,28 +487,25 @@
 
 
       /*
-        이미 웬즈데이가 답변 중이라면
-        그 답변을 중단합니다.
-
-        사용자가 새 말을 했으므로
-        최신 메시지를 우선합니다.
+        이전 AI가 아직 답변 중이면
+        그 요청을 취소.
       */
+
       if (activeRequest) {
-
         cancelActiveRequest();
-
       }
 
 
-      requestSequence += 1;
+      requestSequence++;
 
       const currentRequestId =
         requestSequence;
 
 
       /*
-        사용자 메시지를 화면에 표시
+        사용자 메시지 표시
       */
+
       const userMessage =
         document.createElement("div");
 
@@ -608,7 +519,6 @@
       userBubble.className =
         "bubble";
 
-
       userBubble.textContent =
         message;
 
@@ -617,83 +527,56 @@
         userBubble
       );
 
-
       chat.appendChild(
         userMessage
       );
 
 
-      /*
-        입력창 초기화
-      */
       input.value = "";
 
-
-      /*
-        버튼은 계속 사용할 수 있습니다.
-
-        답변 중에도 사용자가
-        새로운 메시지를 보낼 수 있어야 합니다.
-      */
-      button.disabled = false;
-
+      input.focus();
 
       chat.scrollTop =
         chat.scrollHeight;
 
 
       /*
-        사용자 메시지를 대화 기록에 추가
+        대화 기록에 저장
       */
+
       conversationHistory.push({
-
         role: "user",
-
         content: message
-
       });
 
 
       /*
-        AI 답변 영역은 일단 만들되
-        화면에는 숨겨둡니다.
+        AI 말풍선은 아직 숨김.
       */
+
       const {
         aiMessage,
         aiBubble
-      } =
-        createHiddenAiMessage(
-          chat
-        );
+      } = createAiMessage(chat);
 
 
-      /*
-        현재 요청을 관리하기 위한 AbortController
-      */
       const controller =
         new AbortController();
 
 
       activeRequest = {
-
         id: currentRequestId,
-
         controller,
-
-        aiMessage,
-
+        aiMessage
       };
 
 
       try {
 
         /*
-          Worker에 현재 메시지와
-          이전 대화 기록을 전달합니다.
-
-          현재 사용자 메시지는 이미 history에 들어가 있으므로
-          마지막 항목은 제외합니다.
+          Worker 요청
         */
+
         const response =
           await fetch(
             API_URL,
@@ -709,6 +592,12 @@
 
                 message,
 
+                /*
+                  지금 방금 보낸 메시지는
+                  Worker가 message로 따로 받으므로
+                  history에는 넣지 않음.
+                */
+
                 history:
                   conversationHistory.slice(
                     0,
@@ -719,22 +608,15 @@
 
               signal:
                 controller.signal
-
             }
           );
 
 
-        /*
-          이미 새로운 요청으로 교체된 경우
-          여기서 더 이상 처리하지 않습니다.
-        */
         if (
           currentRequestId !==
           requestSequence
         ) {
-
           return;
-
         }
 
 
@@ -742,7 +624,6 @@
 
           const errorText =
             await response.text();
-
 
           throw new Error(
             errorText ||
@@ -755,171 +636,36 @@
         if (!response.body) {
 
           throw new Error(
-            "스트리밍 응답을 받을 수 없습니다."
+            "응답을 받을 수 없습니다."
           );
 
         }
 
 
         /*
-          AI가 답변을 시작하기 전에
-          상황에 따라 불규칙한 시간을 기다립니다.
+          --------------------------------
+          여기서부터 중요한 부분
+
+          스트리밍 데이터를 받기는 하지만
+          화면에는 절대 바로 보여주지 않는다.
+
+          답변 전체를 받을 때까지
+          화면은 그대로 유지.
+          --------------------------------
         */
-        const thinkingDelay =
-          getThinkingDelay(
-            message
-          );
-
-
-        await sleep(
-          thinkingDelay,
-          controller.signal
-        );
-
-
-        /*
-          대화 도중 사용자가 새 메시지를 보냈다면
-          현재 답변을 폐기합니다.
-        */
-        if (
-          currentRequestId !==
-          requestSequence
-        ) {
-
-          return;
-
-        }
-
 
         const reader =
           response.body.getReader();
 
-
         const decoder =
-          new TextDecoder(
-            "utf-8"
-          );
+          new TextDecoder("utf-8");
 
 
         let buffer = "";
 
         let fullReply = "";
 
-        let displayText = "";
 
-        let typingQueue = "";
-
-        let typingRunning = false;
-
-        let typingPromise = null;
-
-
-        /*
-          실제 화면에 글자를 조금씩 표시합니다.
-
-          스트림 자체는 빠르게 받아도
-          화면에는 약간 불규칙한 속도로 보여줍니다.
-        */
-        async function drainTypingQueue() {
-
-          if (typingRunning) {
-            return;
-          }
-
-
-          typingRunning = true;
-
-
-          try {
-
-            while (
-              typingQueue.length > 0
-            ) {
-
-              if (
-                controller.signal.aborted ||
-                currentRequestId !==
-                  requestSequence
-              ) {
-
-                return;
-
-              }
-
-
-              const character =
-                typingQueue[0];
-
-
-              typingQueue =
-                typingQueue.slice(1);
-
-
-              /*
-                첫 글자가 나오는 순간
-                AI 말풍선을 화면에 표시합니다.
-              */
-              revealAiMessage(
-                aiMessage
-              );
-
-
-              displayText +=
-                character;
-
-
-              aiBubble.textContent =
-                displayText;
-
-
-              chat.scrollTop =
-                chat.scrollHeight;
-
-
-              const delay =
-                getTypingDelay(
-                  character
-                );
-
-
-              try {
-
-                await sleep(
-                  delay,
-                  controller.signal
-                );
-
-              }
-              catch (error) {
-
-                if (
-                  error.name ===
-                  "AbortError"
-                ) {
-
-                  return;
-
-                }
-
-                throw error;
-
-              }
-
-            }
-
-          }
-          finally {
-
-            typingRunning = false;
-
-          }
-
-        }
-
-
-        /*
-          스트리밍 데이터 처리
-        */
         while (true) {
 
           const result =
@@ -935,9 +681,7 @@
             currentRequestId !==
             requestSequence
           ) {
-
             return;
-
           }
 
 
@@ -976,9 +720,7 @@
                 "data:"
               )
             ) {
-
               continue;
-
             }
 
 
@@ -996,9 +738,7 @@
             if (
               data === "[DONE]"
             ) {
-
               continue;
-
             }
 
 
@@ -1008,13 +748,11 @@
                 JSON.parse(data);
 
 
-              /*
-                Gemma 4 / OpenAI compatible
-                스트리밍 형식을 모두 대응합니다.
-              */
               const token =
                 parsed.response ||
-                parsed.choices?.[0]?.delta?.content ||
+                parsed.choices?.[0]
+                  ?.delta
+                  ?.content ||
                 "";
 
 
@@ -1023,34 +761,20 @@
               }
 
 
-              fullReply +=
-                token;
-
-
-              typingQueue +=
-                token;
-
-
               /*
-                첫 번째 텍스트가 들어오면
-                화면에 답변을 표시하기 시작합니다.
+                여기서는 화면에
+                절대로 출력하지 않음.
+
+                전부 모아서 하나의 답변으로 만든다.
               */
-              if (
-                !typingRunning
-              ) {
 
-                typingPromise =
-                  drainTypingQueue();
+              fullReply += token;
 
-              }
-
-            }
-            catch (parseError) {
+            } catch (parseError) {
 
               console.warn(
                 "스트림 데이터 처리 오류:",
-                parseError,
-                data
+                parseError
               );
 
             }
@@ -1061,74 +785,104 @@
 
 
         /*
-          스트림이 끝났지만
-          화면에 아직 표시되지 않은 글자가 있다면
-          전부 표시될 때까지 기다립니다.
+          --------------------------------
+          답변 완성
+          --------------------------------
         */
-        if (
-          typingPromise
-        ) {
 
-          await typingPromise;
+        if (
+          currentRequestId !==
+          requestSequence
+        ) {
+          return;
+        }
+
+
+        const finalReply =
+          fullReply.trim();
+
+
+        if (!finalReply) {
+
+          showAiMessage(
+            aiMessage,
+            aiBubble,
+            "음… 잠깐만요."
+          );
+
+          return;
 
         }
 
 
         /*
-          정상적으로 답변이 완성된 경우에만
-          assistant history에 저장합니다.
+          --------------------------------
+          답변을 받은 뒤에도
+          바로 보여주지 않고 잠깐 기다림.
+
+          사람이 바로 대답하지 않고
+          생각한 뒤 말하는 느낌.
+          --------------------------------
         */
+
+        const thinkingDelay =
+          getThinkingDelay(message);
+
+
+        await sleep(
+          thinkingDelay,
+          controller.signal
+        );
+
+
         if (
-          fullReply.trim() &&
-          currentRequestId ===
-            requestSequence
+          currentRequestId !==
+          requestSequence
         ) {
-
-          conversationHistory.push({
-
-            role: "assistant",
-
-            content: fullReply
-
-          });
-
-        }
-        else if (
-          !fullReply.trim() &&
-          currentRequestId ===
-            requestSequence
-        ) {
-
-          /*
-            답변이 전혀 오지 않은 경우
-            숨겨진 말풍선을 제거하고
-            오류 메시지를 보여줍니다.
-          */
-          aiMessage.style.display =
-            "flex";
-
-
-          aiBubble.textContent =
-            "죄송합니다. 답변을 받아오지 못했습니다.";
-
+          return;
         }
 
-
-      }
-      catch (error) {
 
         /*
-          사용자가 새 메시지를 보내면서
-          기존 요청을 취소한 경우는
-          오류로 표시하지 않습니다.
+          --------------------------------
+          완성된 답변을 한 번에 표시
+          --------------------------------
         */
+
+        showAiMessage(
+          aiMessage,
+          aiBubble,
+          finalReply
+        );
+
+
+        chat.scrollTop =
+          chat.scrollHeight;
+
+
+        /*
+          완성된 답변만 기억.
+        */
+
+        conversationHistory.push({
+          role: "assistant",
+          content: finalReply
+        });
+
+
+      } catch (error) {
+
+        /*
+          사용자가 새 메시지를 보내서
+          기존 요청이 취소된 경우에는
+          아무것도 표시하지 않음.
+        */
+
         if (
           error.name ===
           "AbortError"
         ) {
-
           return;
-
         }
 
 
@@ -1136,9 +890,7 @@
           currentRequestId !==
           requestSequence
         ) {
-
           return;
-
         }
 
 
@@ -1146,11 +898,13 @@
 
 
         /*
-          실패한 현재 사용자 메시지는
-          history에서 제거합니다.
+          실패한 사용자 메시지는
+          대화 기록에서 제거.
         */
+
         if (
-          conversationHistory.length > 0 &&
+          conversationHistory.length >
+          0 &&
           conversationHistory[
             conversationHistory.length - 1
           ].role === "user"
@@ -1161,37 +915,27 @@
         }
 
 
-        aiMessage.style.display =
-          "flex";
+        showAiMessage(
+          aiMessage,
+          aiBubble,
+          "잠깐 문제가 생겼어요.\n조금 있다가 다시 말해 주세요."
+        );
 
 
-        aiBubble.textContent =
-          "현재 웬즈데이와 연결할 수 없습니다.\n" +
-          "잠시 후 다시 시도해 주세요.\n\n" +
-          "오류: " +
-          error.message;
+      } finally {
 
-      }
-      finally {
-
-        /*
-          현재 요청이 아직 최신 요청이라면
-          activeRequest를 정리합니다.
-        */
         if (
           activeRequest &&
           activeRequest.id ===
-            currentRequestId
+          currentRequestId
         ) {
 
-          activeRequest =
-            null;
+          activeRequest = null;
 
         }
 
 
         input.focus();
-
 
         chat.scrollTop =
           chat.scrollHeight;
@@ -1202,15 +946,13 @@
 
 
     /*
-      Enter 키로 전송
-
-      한글 입력 중 조합 상태에서는
-      전송하지 않습니다.
+      --------------------------------
+      Enter 키
+      --------------------------------
     */
+
     document
-      .getElementById(
-        "messageInput"
-      )
+      .getElementById("messageInput")
       .addEventListener(
         "keydown",
         function(event) {
@@ -1233,4 +975,3 @@
 
 </body>
 </html>
-```
