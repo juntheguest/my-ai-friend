@@ -420,20 +420,20 @@
 
         }
 
-        else if (data.error) {
+else if (data.error) {
 
-          aiBubble.textContent =
-            "죄송합니다. 현재 처리 중 문제가 발생했습니다.\n" +
-            data.error;
+  aiBubble.textContent =
+    "오류가 발생했습니다.\n" +
+    (data.details?.error?.message || data.error);
 
-        }
+}
 
-        else {
+else {
 
-          aiBubble.textContent =
-            "죄송합니다. 답변을 받아오지 못했습니다.";
+  aiBubble.textContent =
+    "죄송합니다. 답변을 받아오지 못했습니다.";
 
-        }
+}
 
 
       }
