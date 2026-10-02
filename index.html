@@ -6,6 +6,7 @@
     name="viewport"
     content="width=device-width, initial-scale=1.0"
   />
+
   <title>웬즈데이</title>
 
   <style>
@@ -19,13 +20,13 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      background: #f4f4f5;
       font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         "Noto Sans KR",
         sans-serif;
-      background: #b2c7d9;
     }
 
     body {
@@ -33,28 +34,43 @@
       justify-content: center;
     }
 
+    /* =========================
+       전체 앱
+    ========================= */
+
     .app {
       width: 100%;
       max-width: 760px;
       height: 100vh;
+
       display: flex;
       flex-direction: column;
+
       background: #b2c7d9;
+
       overflow: hidden;
+
+      box-shadow:
+        0 0 30px rgba(0, 0, 0, 0.08);
     }
 
-    /* -----------------------------
-       상단
-    ----------------------------- */
+    /* =========================
+       상단 노란색 영역
+    ========================= */
 
     .header {
       height: 64px;
       flex-shrink: 0;
+
       display: flex;
       align-items: center;
+
       padding: 0 16px;
+
       background: #fee500;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+      border-bottom:
+        1px solid rgba(0, 0, 0, 0.08);
     }
 
     .header-left {
@@ -66,13 +82,19 @@
     .avatar {
       width: 39px;
       height: 39px;
+
       flex-shrink: 0;
+
       border-radius: 50%;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       background: #222222;
+
       color: #fee500;
+
       font-size: 15px;
       font-weight: 800;
     }
@@ -85,21 +107,33 @@
 
     .status {
       margin-top: 2px;
+
       font-size: 11px;
-      color: rgba(0, 0, 0, 0.55);
+
+      color:
+        rgba(0, 0, 0, 0.55);
     }
 
-    /* -----------------------------
-       채팅
-    ----------------------------- */
+    /* =========================
+       채팅 영역
+       하늘색은 여기까지만
+    ========================= */
 
     .chat {
       flex: 1;
+
       overflow-y: auto;
-      padding: 18px 14px 22px;
+
+      padding:
+        18px
+        14px
+        22px;
+
       display: flex;
       flex-direction: column;
+
       gap: 8px;
+
       background: #b2c7d9;
     }
 
@@ -116,58 +150,91 @@
       justify-content: flex-start;
     }
 
+    /* =========================
+       말풍선
+    ========================= */
+
     .bubble {
-      max-width: min(78%, 560px);
-      padding: 9px 12px;
+      max-width:
+        min(78%, 560px);
+
+      padding:
+        9px
+        12px;
+
       border-radius: 12px;
+
       font-size: 14px;
+
       line-height: 1.55;
+
       white-space: pre-wrap;
+
       word-break: break-word;
+
       box-shadow:
-        0 1px 1px rgba(0, 0, 0, 0.04);
+        0 1px 1px
+        rgba(0, 0, 0, 0.04);
     }
 
-    /* 사용자 = 카카오톡 노란색 */
+    /* 사용자 */
 
     .user .bubble {
       background: #fee500;
+
       color: #222222;
+
       border-top-right-radius: 3px;
     }
 
-    /* 웬즈데이 = 흰색 */
+    /* 웬즈데이 */
 
     .assistant .bubble {
       background: #ffffff;
+
       color: #222222;
+
       border-top-left-radius: 3px;
     }
 
     .assistant-wrap {
       display: flex;
+
       flex-direction: column;
+
       align-items: flex-start;
     }
 
     .proactive-label {
       font-size: 10px;
-      color: rgba(0, 0, 0, 0.45);
+
+      color:
+        rgba(0, 0, 0, 0.45);
+
       margin-left: 3px;
+
       margin-bottom: 3px;
     }
 
-    /* -----------------------------
+    /* =========================
        타이핑
-    ----------------------------- */
+    ========================= */
 
     .typing {
       display: none;
+
       align-items: center;
+
       gap: 4px;
-      padding: 10px 13px;
+
+      padding:
+        10px
+        13px;
+
       background: #ffffff;
+
       border-radius: 12px;
+
       border-top-left-radius: 3px;
     }
 
@@ -178,10 +245,16 @@
     .dot {
       width: 5px;
       height: 5px;
+
       background: #888888;
+
       border-radius: 50%;
+
       animation:
-        blink 1.2s infinite ease-in-out;
+        blink
+        1.2s
+        infinite
+        ease-in-out;
     }
 
     .dot:nth-child(2) {
@@ -204,32 +277,57 @@
       }
     }
 
-    /* -----------------------------
-       입력창
-    ----------------------------- */
+    /* =========================
+       하단 입력 영역
+    ========================= */
 
     .composer {
       flex-shrink: 0;
+
       display: flex;
+
       align-items: flex-end;
+
       gap: 8px;
-      padding: 9px 10px;
+
+      padding:
+        9px
+        10px;
+
       background: #eeeeee;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+      border-top:
+        1px solid
+        rgba(0, 0, 0, 0.08);
     }
 
     textarea {
       flex: 1;
+
       resize: none;
+
       min-height: 42px;
+
       max-height: 130px;
-      padding: 10px 12px;
-      border: 1px solid #dddddd;
+
+      padding:
+        10px
+        12px;
+
+      border:
+        1px solid
+        #dddddd;
+
       border-radius: 5px;
+
       outline: none;
+
       font-family: inherit;
+
       font-size: 14px;
+
       line-height: 1.4;
+
       background: #ffffff;
     }
 
@@ -240,37 +338,63 @@
     button {
       width: 42px;
       height: 42px;
+
       flex-shrink: 0;
+
       border: none;
+
       border-radius: 5px;
+
       background: #fee500;
+
       color: #222222;
+
       cursor: pointer;
+
       font-size: 17px;
+
       font-weight: 700;
     }
 
     button:disabled {
       opacity: 0.4;
+
       cursor: default;
     }
 
+    /* =========================
+       빈 화면
+    ========================= */
+
     .empty {
       margin: auto;
+
       text-align: center;
-      color: rgba(0, 0, 0, 0.42);
+
+      color:
+        rgba(0, 0, 0, 0.42);
+
       font-size: 13px;
+
       line-height: 1.6;
     }
 
+    /* =========================
+       모바일
+    ========================= */
+
     @media (max-width: 600px) {
+
       .app {
         max-width: none;
+
+        box-shadow: none;
       }
 
       .bubble {
         max-width: 84%;
       }
+
     }
   </style>
 </head>
@@ -279,21 +403,34 @@
 
 <div class="app">
 
+  <!-- 상단 -->
+
   <header class="header">
 
     <div class="header-left">
 
-      <div class="avatar">W</div>
+      <div class="avatar">
+        W
+      </div>
 
       <div>
-        <div class="name">웬즈데이</div>
-        <div class="status">당신의 AI 친구</div>
+
+        <div class="name">
+          웬즈데이
+        </div>
+
+        <div class="status">
+          당신의 AI 친구
+        </div>
+
       </div>
 
     </div>
 
   </header>
 
+
+  <!-- 채팅 -->
 
   <main
     class="chat"
@@ -311,6 +448,8 @@
   </main>
 
 
+  <!-- 입력 -->
+
   <form
     class="composer"
     id="composer"
@@ -325,7 +464,9 @@
     <button
       id="send"
       type="submit"
-    >↑</button>
+    >
+      ↑
+    </button>
 
   </form>
 
@@ -339,28 +480,39 @@ const API =
 
 
 const chat =
-  document.getElementById("chat");
+  document.getElementById(
+    "chat"
+  );
 
 const input =
-  document.getElementById("input");
+  document.getElementById(
+    "input"
+  );
 
 const send =
-  document.getElementById("send");
+  document.getElementById(
+    "send"
+  );
 
 const composer =
-  document.getElementById("composer");
+  document.getElementById(
+    "composer"
+  );
 
 const empty =
-  document.getElementById("empty");
+  document.getElementById(
+    "empty"
+  );
 
 
 let waiting = false;
+
 let waitingTimer = null;
 
 
-/* -----------------------------
-   기본 화면
------------------------------ */
+/* =========================
+   빈 화면 제거
+========================= */
 
 function removeEmpty() {
 
@@ -370,6 +522,10 @@ function removeEmpty() {
 
 }
 
+
+/* =========================
+   아래로 스크롤
+========================= */
 
 function scrollBottom() {
 
@@ -383,9 +539,9 @@ function scrollBottom() {
 }
 
 
-/* -----------------------------
-   메시지 표시
------------------------------ */
+/* =========================
+   메시지 추가
+========================= */
 
 function addMessage(
   role,
@@ -397,16 +553,22 @@ function addMessage(
 
 
   const row =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   row.className =
     `message-row ${role}`;
 
 
-  if (role === "assistant") {
+  if (
+    role === "assistant"
+  ) {
 
     const wrap =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     wrap.className =
       "assistant-wrap";
@@ -415,7 +577,9 @@ function addMessage(
     if (proactive) {
 
       const label =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       label.className =
         "proactive-label";
@@ -423,13 +587,17 @@ function addMessage(
       label.textContent =
         "웬즈데이가 먼저 보냄";
 
-      wrap.appendChild(label);
+      wrap.appendChild(
+        label
+      );
 
     }
 
 
     const bubble =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     bubble.className =
       "bubble";
@@ -438,13 +606,20 @@ function addMessage(
       content;
 
 
-    wrap.appendChild(bubble);
-    row.appendChild(wrap);
+    wrap.appendChild(
+      bubble
+    );
+
+    row.appendChild(
+      wrap
+    );
 
   } else {
 
     const bubble =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     bubble.className =
       "bubble";
@@ -453,21 +628,25 @@ function addMessage(
       content;
 
 
-    row.appendChild(bubble);
+    row.appendChild(
+      bubble
+    );
 
   }
 
 
-  chat.appendChild(row);
+  chat.appendChild(
+    row
+  );
 
   scrollBottom();
 
 }
 
 
-/* -----------------------------
+/* =========================
    타이핑 표시
------------------------------ */
+========================= */
 
 function showTyping() {
 
@@ -475,7 +654,9 @@ function showTyping() {
 
 
   const row =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   row.className =
     "message-row assistant";
@@ -485,14 +666,18 @@ function showTyping() {
 
 
   const wrap =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   wrap.className =
     "assistant-wrap";
 
 
   const typing =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   typing.className =
     "typing show";
@@ -504,9 +689,17 @@ function showTyping() {
   `;
 
 
-  wrap.appendChild(typing);
-  row.appendChild(wrap);
-  chat.appendChild(row);
+  wrap.appendChild(
+    typing
+  );
+
+  row.appendChild(
+    wrap
+  );
+
+  chat.appendChild(
+    row
+  );
 
 
   scrollBottom();
@@ -529,9 +722,9 @@ function hideTyping() {
 }
 
 
-/* -----------------------------
+/* =========================
    대화 기록
------------------------------ */
+========================= */
 
 async function loadHistory() {
 
@@ -633,18 +826,22 @@ async function loadHistory() {
     );
 
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   }
 
 }
 
 
-/* -----------------------------
-   자연스러운 대기시간
------------------------------ */
+/* =========================
+   자연스러운 응답 대기시간
+========================= */
 
-function getNaturalDelay(text) {
+function getNaturalDelay(
+  text
+) {
 
   const length =
     text.length;
@@ -659,12 +856,16 @@ function getNaturalDelay(text) {
     min = 700;
     max = 1800;
 
-  } else if (length < 40) {
+  } else if (
+    length < 40
+  ) {
 
     min = 900;
     max = 2400;
 
-  } else if (length < 100) {
+  } else if (
+    length < 100
+  ) {
 
     min = 1300;
     max = 3200;
@@ -685,11 +886,13 @@ function getNaturalDelay(text) {
 }
 
 
-/* -----------------------------
+/* =========================
    메시지 전송
------------------------------ */
+========================= */
 
-async function sendMessage(message) {
+async function sendMessage(
+  message
+) {
 
   if (
     !message ||
@@ -702,6 +905,7 @@ async function sendMessage(message) {
   waiting = true;
 
   send.disabled = true;
+
   input.disabled = true;
 
 
@@ -764,11 +968,6 @@ async function sendMessage(message) {
     }
 
 
-    /*
-      웬즈데이가 답변을 완성한 뒤
-      잠깐 기다렸다가 한 번에 보여준다.
-    */
-
     const delay =
       getNaturalDelay(
         reply
@@ -791,11 +990,6 @@ async function sendMessage(message) {
     hideTyping();
 
 
-    /*
-      /redsun이어도 화면의 기존 대화는
-      삭제하지 않는다.
-    */
-
     addMessage(
       "assistant",
       reply
@@ -813,13 +1007,16 @@ async function sendMessage(message) {
     );
 
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   } finally {
 
     waiting = false;
 
     send.disabled = false;
+
     input.disabled = false;
 
     input.focus();
@@ -829,9 +1026,9 @@ async function sendMessage(message) {
 }
 
 
-/* -----------------------------
-   먼저 연락하기
------------------------------ */
+/* =========================
+   먼저 연락
+========================= */
 
 async function checkProactive() {
 
@@ -868,7 +1065,6 @@ async function checkProactive() {
 
     }
 
-
   } catch (error) {
 
     console.error(
@@ -881,9 +1077,9 @@ async function checkProactive() {
 }
 
 
-/* -----------------------------
-   전송
------------------------------ */
+/* =========================
+   전송 버튼
+========================= */
 
 composer.addEventListener(
   "submit",
@@ -915,9 +1111,9 @@ composer.addEventListener(
 );
 
 
-/* -----------------------------
-   Enter
------------------------------ */
+/* =========================
+   Enter 전송
+========================= */
 
 input.addEventListener(
   "keydown",
@@ -938,9 +1134,9 @@ input.addEventListener(
 );
 
 
-/* -----------------------------
-   입력창 높이
------------------------------ */
+/* =========================
+   입력창 자동 높이
+========================= */
 
 input.addEventListener(
   "input",
@@ -960,15 +1156,16 @@ input.addEventListener(
 );
 
 
-/* -----------------------------
+/* =========================
    시작
------------------------------ */
+========================= */
 
 loadHistory();
 
 
 /*
-  1분마다 먼저 연락 여부 확인
+  1분마다 웬즈데이가
+  먼저 연락할 수 있는지 확인
 */
 
 setInterval(
